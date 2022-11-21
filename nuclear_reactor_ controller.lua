@@ -8,26 +8,36 @@ fuel_waste_direction = sides.up
 fuel_direction = sides.down
 rs_side = sides.west
 cell_name = "60k_NaK"
-fuel_waste_name = "______"
-log_duration = 300
-check_duration = 1
+fuel_waste_name = "depleted"
+log_duration = 60
 eu_t_full = 43600
+battery_max_sotrage = 6400000
+num_batteries = 4
 
 tsp = component.transposer
 rs = component.redstone
+bf = component.gt_batterybuffer
 
 running_time = 0
 waiting_time = 0
 
-function get_valid_idx(side) 
+function get_empty_idx(side) 
     while true do
-        for idx, item in pairs(tsp.getAllStacks(side)) do
-            if item == nil then
+        for idx, item in pairs(tsp.getAllStacks(side).getAll()) do
+            if item.name == nil then
                 return idx
             end
         end
         print("waiting for empty space in dirty cell chest")
         os.sleep(8)
+    end
+end
+
+function get_valid_idx(side) 
+    for idx, item in pairs(tsp.getAllStacks(side).getAll()) do
+        if item.name ~= nil then
+            return idx
+        end
     end
 end
 
@@ -41,7 +51,7 @@ end
 
 function check_sth_to_replace_cell(name, side)
     while true do
-        if tsp.getStackInSlot(side, 1) ~= nil then
+        if get_valid_idx(side) ~= nil then
             return
         end
         if name == "cell" then
@@ -57,24 +67,28 @@ function do_replace_dirty_cell(name, idx, waste_side, clean_side)
     print("running replacement procedure...")
     print(string.format("try replacing %s at %d", name, idx))
     check_sth_to_replace_cell(name, clean_side)
-    tsp.transferItem(
+    tar_idx = get_empty_idx(waste_side) + 1
+    print(string.format("%s transferring from %.0f to %.0f", name, idx, tar_idx))
+    assert(tsp.transferItem(
         reactor_direction, -- src_side
         waste_side, -- tar_side
         1,    -- count
         idx,  -- src_idx
-        get_valid_idx(waste_side) -- tar_idx
-    )
-    tsp.transferItem(
+        tar_idx -- tar_idx
+    ) ~= 0)
+    src_idx = get_valid_idx(clean_side) + 1
+    print(string.format("%s transferring from %.0f to %.0f", name, src_idx, idx))
+    assert(tsp.transferItem(
         clean_side, -- src_side
         reactor_direction, -- tar_side
         1,  -- count
-        1,  -- src_idx
+        src_idx,  -- src_idx
         idx -- tar_idx
-    )
+    ) ~= 0)
     print("running replacement procedure success.")
 end
 
-function print_log() 
+function print_log()
     print("----------LOG----------")
     print(string.format(
             "efficiency: %.3f%%, generating $.0f EU/t", 
@@ -85,32 +99,52 @@ function print_log()
     print("----------LOG----------")
 end
 
+function wait_until_need_enegry() 
+    while true do 
+        now = 0
+        for i=1, num_batteries, 1 do 
+            now = now + bf.getBatteryCharge(i)
+        end
+        tot = num_batteries * battery_max_sotrage
+        print(string.format("enegry: %.0f / %.0f, %.3f%%", now, tot, now / tot * 100))
+        if now / tot * 100 <= 101 then
+            return 
+        else 
+            print("enegry fully charged!")
+            os.sleep(60)
+        end
+    end
+end
+
 begin = os.time()
 
 while true do
 
-    os.sleep(check_duration)
+    wait_until_need_enegry()
 
     tic = os.time()
 
     yield_reactor()
 
-    for idx, item in pairs(tsp.getAllStacks(reactor_direction)) do
-        if item ~= nil then
+    os.sleep(0.8)
+
+    for idx, item in pairs(tsp.getAllStacks(reactor_direction).getAll()) do
+        if item.name ~= nil then
             if string.find(item.name, cell_name) ~= nil then
-                if item.damage >= 98 then
-                    do_replace_dirty_cell("cell", idx, dirty_cell_direction, clean_cell_direction)
+                if item.damage >= 95 then
+                    do_replace_dirty_cell("cell", idx + 1, dirty_cell_direction, clean_cell_direction)
                 end
-            else if string.find(item.name, fuel_waste_name) ~= nil then
-                do_replace_dirty_cell("fuel", idx, fuel_waste_direction, fuel_direction)
+            elseif string.find(item.name, fuel_waste_name) ~= nil then
+                do_replace_dirty_cell("fuel", idx + 1, fuel_waste_direction, fuel_direction)
             end
         end
     end
 
     resume_reactor()
 
-    waiting_time += os.time() - tic
+    os.sleep(1.2)
 
+    waiting_time = waiting_time + os.time() - tic
     running_time = os.time() - begin
 
     if running_time >= log_duration then
