@@ -19,8 +19,6 @@ rs = component.redstone
 running_time = 0
 waiting_time = 0
 
-lst_duration = 0
-
 function get_valid_idx(side) 
     while true do
         for idx, item in pairs(tsp.getAllStacks(side)) do
@@ -43,7 +41,7 @@ end
 
 function check_sth_to_replace_cell(name, side)
     while true do
-        if tsp.getStackInSlot(clean_cell_direction, 1) ~= nil then
+        if tsp.getStackInSlot(side, 1) ~= nil then
             return
         end
         if name == "cell" then
