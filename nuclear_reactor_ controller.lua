@@ -107,7 +107,7 @@ function wait_until_need_enegry()
         end
         tot = num_batteries * battery_max_sotrage
         print(string.format("enegry: %.0f / %.0f, %.3f%%", now, tot, now / tot * 100))
-        if now / tot * 100 <= 101 then
+        if now / tot * 100 <= 98 then
             return 
         else 
             print("enegry fully charged!")
