@@ -49,7 +49,7 @@ function check_sth_to_replace_cell(name, side)
         if name == "cell" then
             print("waiting for clean cell")
         else
-            print("waiting for fuel!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("RUNNING OUT OF FUEL!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         end
         os.sleep(8)
     end
@@ -57,7 +57,7 @@ end
 
 function do_replace_dirty_cell(name, idx, waste_side, clean_side)
     print("running replacement procedure...")
-    print(string.format("replacing %s at %d", name, idx))
+    print(string.format("try replacing %s at %d", name, idx))
     check_sth_to_replace_cell(name, clean_side)
     tsp.transferItem(
         reactor_direction, -- src_side
