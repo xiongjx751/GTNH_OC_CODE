@@ -64,11 +64,11 @@ function check_sth_to_replace_cell(name, side)
 end
 
 function do_replace_dirty_cell(name, idx, waste_side, clean_side)
-    print("running replacement procedure...")
-    print(string.format("try replacing %s at %d", name, idx))
+    -- print("running replacement procedure...")
+    -- print(string.format("try replacing %s at %d", name, idx))
     check_sth_to_replace_cell(name, clean_side)
     tar_idx = get_empty_idx(waste_side) + 1
-    print(string.format("%s transferring from %.0f to %.0f", name, idx, tar_idx))
+    -- print(string.format("%s transferring from %.0f to %.0f", name, idx, tar_idx))
     assert(tsp.transferItem(
         reactor_direction, -- src_side
         waste_side, -- tar_side
@@ -77,7 +77,7 @@ function do_replace_dirty_cell(name, idx, waste_side, clean_side)
         tar_idx -- tar_idx
     ) ~= 0)
     src_idx = get_valid_idx(clean_side) + 1
-    print(string.format("%s transferring from %.0f to %.0f", name, src_idx, idx))
+    -- print(string.format("%s transferring from %.0f to %.0f", name, src_idx, idx))
     assert(tsp.transferItem(
         clean_side, -- src_side
         reactor_direction, -- tar_side
@@ -85,7 +85,7 @@ function do_replace_dirty_cell(name, idx, waste_side, clean_side)
         src_idx,  -- src_idx
         idx -- tar_idx
     ) ~= 0)
-    print("running replacement procedure success.")
+    -- print("running replacement procedure success.")
 end
 
 function print_log()
