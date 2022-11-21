@@ -18,9 +18,6 @@ tsp = component.transposer
 rs = component.redstone
 bf = component.gt_batterybuffer
 
-running_time = 0
-waiting_time = 0
-
 function get_empty_idx(side) 
     while true do
         for idx, item in pairs(tsp.getAllStacks(side).getAll()) do
@@ -88,17 +85,6 @@ function do_replace_dirty_cell(name, idx, waste_side, clean_side)
     -- print("running replacement procedure success.")
 end
 
-function print_log()
-    print("----------LOG----------")
-    print(string.format(
-            "efficiency: %.3f%%, generating $.0f EU/t", 
-            waiting_time / running_time * 100,
-            waiting_time / running_time * eu_t_full
-        )
-    )
-    print("----------LOG----------")
-end
-
 function wait_until_need_enegry() 
     while true do 
         now = 0
@@ -116,13 +102,9 @@ function wait_until_need_enegry()
     end
 end
 
-begin = os.time()
-
 while true do
 
     wait_until_need_enegry()
-
-    tic = os.time()
 
     yield_reactor()
 
@@ -143,13 +125,4 @@ while true do
     resume_reactor()
 
     os.sleep(1.2)
-
-    waiting_time = waiting_time + os.time() - tic
-    running_time = os.time() - begin
-
-    if running_time >= log_duration then
-        print_log()
-        waiting_time = 0
-        begin = os.time()
-    end
 end
